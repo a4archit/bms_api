@@ -107,16 +107,38 @@ def particular_book_data(
 # route (/search) for searching an book across data
 @app.get("/search/{query}")
 def search(
-    query: str = Path(..., title="Query that enter by user for searching", examples=['A walk to life (by title)', 'Aman Shrivaastava (by author)'], description="This is the search term (search query) that to be searched accross dataset."),
-    by: str = Query('title', title="Search key for searching", examples=['title','author','year','isbn'], description="A search key tell server that hat exact will it search for given query."),
-    items: int = Query(10, title="Total number of items to be returned", examples=[10, 20, 50], description="This is the total number of items that would be return after search the particular book.")
+        query: str = Path(..., title="Query that enter by user for searching", examples=['A walk to life (by title)', 'Aman Shrivaastava (by author)'], description="This is the search term (search query) that to be searched accross dataset."),
+        search_key: str = Query('title', title="Search key for searching", examples=['title','author','year','isbn'], description="A search key tell server that hat exact will it search for given query."),
+        items: int = Query(10, title="Total number of items to be returned", examples=[10, 20, 50], description="This is the total number of items that would be return after search the particular book.")
     ) -> dict :
+
     """  
         This function returns searched books data with respect to the search 
         key [title, author, etc] of number of elements [10, 20, 50, etc]
     """
 
-    return {"your query": query, "by": by, 'no of items': items}
+
+    # defining some variables
+    valid_search_keys = ['title', 'author','description','published_year','category']
+    valid_items = [1,5,10,20,50,100,500]
+
+
+    # checking are queries valid or not
+    if search_key not in valid_search_keys:
+        raise HTTPException(status_code=400, detail=f"Invalid search key '{search_key}', valid keys are {valid_search_keys}")
+    if items not in valid_items:
+        raise HTTPException(status_code=400, detail=f"You can view books at a time only from these numbers {valid_items}")
+
+    results: list[dict] = []
+
+    for index,each_book_data in enumerate(DATA.values()):
+        if len(results) == items:
+            break
+        if query in each_book_data[search_key].lower():
+            results.append(each_book_data)
+
+
+    return {'results': results}
 
 
 
