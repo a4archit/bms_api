@@ -10,7 +10,9 @@ BMS-API
 
 # Dependencies
 from fastapi import FastAPI, Path, Query, HTTPException
-from typing import List
+from pydantic import Field, BaseModel, AnyUrl, EmailStr
+from typing import List, Dict, Optional, Annotated
+from datetime import datetime
 import json 
 
 
@@ -23,6 +25,29 @@ def load_data() -> dict :
         data = json.load(file)
 
     return data
+
+
+
+
+# extracting current year
+current_year = datetime.today().year
+
+
+
+class Book(BaseModel):
+    isbn13: Annotated[str, Field(..., title='ISBN', description='ISBN number of 13 digits', examples=['9780002005883'])]
+    isbn10: Annotated[str, Field(title="ISBN 10", description="ISBN 10 is a unique number of 10 digits", examples=['0002005883'])]
+    title: Annotated[str, Field(..., title='Title', description='Title of book (short text)')]
+    subtitle: Annotated[Optional[int], Field(..., title='Subtitle', description='Subtitle of book')] = ""
+    author: Annotated[str, Field(..., title='Author', description='Name of the book author.')]
+    category: Annotated[Optional[str], Field(..., title='Category', description='Category of book')] = ""
+    thumbnail: Annotated[AnyUrl, Field(..., title='Thumbnail URL', description='URL of book thumbnail')]
+    description: Annotated[str, Field(..., title='Description', description='Description of the book')]
+    published_year: Annotated[int, Field(gt=0, lt=current_year+1, title='Published year', description='Published year of the book')]
+    average_rating: Annotated[Optional[float], Field(title='Average Rating', description='Average rating of book provide by users')] = None
+    num_pages: Annotated[int, Field(..., title='Total pages', description='Total number of pages in the book')]
+    ratings_count: Annotated[Optional[int], Field(..., title='Total Ratings', description='Total number of reviews given by the readers.')] = None
+
 
 
 
@@ -139,6 +164,27 @@ def search(
 
 
     return {'results': results}
+
+
+
+
+
+
+
+
+# route (/new) for adding new books
+@app.route('/new')
+def new_book(book_data: Book) -> None:
+    """ this function will add new data to the dataset """
+
+    if book_data.isbn13 in DATA:
+        raise HTTPException(status_code=400, detail=f'Record already found {book_data.isbn13}')
+    
+    book_data = book_data.model_dump(exclude='isbn13')
+
+    return book_data
+
+
 
 
 
