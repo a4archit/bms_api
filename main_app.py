@@ -173,7 +173,7 @@ def search(
 
 
 # route (/new) for adding new books
-@app.route('/new')
+@app.post('/new')
 def new_book(book_data: Book) -> None:
     """ this function will add new data to the dataset """
 
@@ -181,6 +181,8 @@ def new_book(book_data: Book) -> None:
         raise HTTPException(status_code=400, detail=f'Record already found {book_data.isbn13}')
     
     book_data = book_data.model_dump(exclude='isbn13')
+
+    print(book_data)
 
     return book_data
 

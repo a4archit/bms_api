@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel, AnyUrl, EmailStr
+from pydantic import Field, BaseModel, AnyUrl, EmailStr, field_validator, model_validator
 from typing import List, Dict, Optional, Annotated
 from datetime import datetime
 
@@ -38,11 +38,80 @@ book1_data = {
 
 book1 = Book(**book1_data)
 
-print(
-    '\n\n\n',
-    book1,
-    '\n\n\n'
-)
+# print(
+#     '\n\n\n',
+#     book1,
+#     '\n\n\n'
+# )
+
+
+
+class Address(BaseModel):
+
+    city: str 
+    state: str
+    pincode: int
+
+
+
+
+class Person(BaseModel):
+
+    name: Annotated[str, Field(..., title="name of person")]
+    age: Annotated[int, Field(..., title="Age of person in years")]
+    married: Annotated[bool, Field(default=False, title='Person marital status')]
+    email: Annotated[str, Field(..., title='Email of person')]
+    height: Annotated[float, Field(..., title='Height of person in metres')]
+    weight: Annotated[float, Field(..., title='Weight of person in kg')]
+    contact: Annotated[Dict[str, str], Field(..., title='Contact informations python dictionary')]
+    address: Annotated[Address, Field(..., title='Address of person')]
+
+    # @computed_field
+    @property
+    def bmi(self) -> float:
+        bmi = self.weight/(self.height**2)
+        return bmi
+
+
+    @model_validator(mode='after')
+    @classmethod
+    def emergency_number_validator(cls, model):
+        if model.age > 60 and 'emergency' not in model.contact:
+            raise ValueError('Person is older than 60 years and emergency contact not provided yet.')
+        return model
+    
+
+    @field_validator('email')
+    @classmethod
+    def email_validator(cls, value):
+        valid_domains = ['gmail.com','yahoo.com']
+        domain_name = value.strip().split('@')[-1]
+        if domain_name not in valid_domains:
+            raise ValueError('Not a valid email')
+        return value
+    
+
+    @field_validator('name')
+    @classmethod
+    def transform_name(cls, name) -> str:
+        return name.upper()
+
+p1_address = Address(**{'city':'meerut','state':'uttar pradesh', 'pincode':298477})
+p1_data = {'name':'arpit','age':'64','email':'abc@gmail.com', 
+           'contact':{'mob':'8374937584','emergency':'838495748'},
+           'weight':'54', 'height':'1.7', 'address': p1_address}
+
+p1 = Person(**p1_data)
+
+print('\n\n',p1)
+
+dict_data = p1.model_dump(exclude={'address':['city']})
+
+print(dict_data)
+
+
+
+
 
 
 
