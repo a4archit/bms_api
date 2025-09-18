@@ -54,7 +54,7 @@ class Address(BaseModel):
 
 
 
-
+# building model (schema)
 class Person(BaseModel):
 
     name: Annotated[str, Field(..., title="name of person")]
