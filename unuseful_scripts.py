@@ -7,6 +7,7 @@ from datetime import datetime
 current_year = datetime.today().year
 
 
+# building pydantic model
 class Book(BaseModel):
     isbn13: Annotated[str, Field(..., title='ISBN', description='ISBN number of 13 digits', examples=['9780002005883'])]
     isbn10: Annotated[str, Field(title="ISBN 10", description="ISBN 10 is a unique number of 10 digits", examples=['0002005883'])]
